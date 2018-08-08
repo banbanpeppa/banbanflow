@@ -34,7 +34,7 @@ arg_version = tf.app.flags.FLAGS.version
 arg_steps = tf.app.flags.FLAGS.steps
 
 # network parameters
-mnist = input_data.read_data_sets("mnist_data_set/", one_hot=True)
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 feature_size = 784
 num_classes = 10
 hidden_size = feature_size - 100
