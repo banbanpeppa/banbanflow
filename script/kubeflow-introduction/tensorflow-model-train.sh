@@ -5,7 +5,7 @@ uuid=`uuidgen`
 uuid=${uuid:0:8}
 
 if [ ! -d "/tmp/model-train-serve" ]; then
-	mkdir -p /tmp/model-train
+	mkdir -p /tmp/model-train-serve
 fi
 
 MODEL_SERVE_YAML_TMP=/tmp/model-train-serve/serve-${uuid}.yaml
