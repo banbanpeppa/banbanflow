@@ -52,7 +52,6 @@ metadata:
     app.kubernetes.io/deploy-manager: ksonnet
   name: inception-mnist-uuidgen
 spec:
-  clusterIP: 10.108.238.74
   ports:
   - name: grpc-tf-serving
     port: 9000

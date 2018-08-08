@@ -11,8 +11,8 @@ fi
 MODEL_SERVE_YAML_TMP=/tmp/model-train-serve/serve-${uuid}.yaml
 MODEL_TRANING_YAML_TMP=/tmp/model-train-serve/training-${uuid}.yaml
 
-curl -sSL "https://raw.githubusercontent.com/banbanandroid/banbanflow/master/script/kubeflow-introduction/mode-serve.yaml" > ${MODEL_SERVE_YAML_TMP}
-curl -sSL "https://raw.githubusercontent.com/banbanandroid/banbanflow/master/script/kubeflow-introduction/tensorflow-model.yaml" > ${MODEL_TRANING_YAML_TMP}
+curl -sSL "https://raw.githubusercontent.com/banbanandroid/banbanflow/master/script/kubeflow-introduction/model-serve.yaml" > ${MODEL_SERVE_YAML_TMP}
+curl -sSL "https://raw.githubusercontent.com/banbanandroid/banbanflow/master/script/kubeflow-introduction/model-train.yaml" > ${MODEL_TRANING_YAML_TMP}
 
 sed -i "s/uuidgen/${uuid}/g" ${MODEL_SERVE_YAML_TMP}
 sed -i "s/uuidgen/${uuid}/g" ${MODEL_TRANING_YAML_TMP}
