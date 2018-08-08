@@ -6,7 +6,7 @@ uuid=${uuid:0:8}
 
 if [ ! -d "/tmp/model-train" ]; then
 	mkdir -p /tmp/model-train
-if
+fi
 
 MODEL_TRANING_YAML_TMP=/tmp/model-train/training-${uuid}.yaml
 
