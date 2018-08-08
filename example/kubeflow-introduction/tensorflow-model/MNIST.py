@@ -117,7 +117,7 @@ legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
 
 print("saving model locally")
 # save model to disk
-export_path = arg_version
+export_path = "./model/" + arg_version
 builder = tf.saved_model.builder.SavedModelBuilder(export_path)
 builder.add_meta_graph_and_variables(
       sess, [tf.saved_model.tag_constants.SERVING],
