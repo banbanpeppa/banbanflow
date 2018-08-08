@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: model-traing-pv-uuidgen
+  labels:
+    tfdata: mt-uuidgen
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Recycle
+  hostPath:
+    path: /cephfs/model-traing/uuidgen
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: model-traing-pv-claim-uuidgen
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      tfdata: mt-uuidgen
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: model-traing-uuidgen
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: model-traing
+      tb-job: model-traing
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: model-traing
+        tb-job: model-traing
+      name: model-traing
+      namespace: default
+    spec:
+      containers:
+      - image: registry.cn-shenzhen.aliyuncs.com/gcr_io_kubeflow/kubeflow-train:1533699520
+        imagePullPolicy: IfNotPresent
+        name: model-traing
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources: {}
+        volumeMounts:
+        - name: model-traing-persisten-storage
+          mountPath: /home/tensorflow
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: model-traing-persisten-storage
+        persistentVolumeClaim:
+          claimName: model-traing-pv-claim-uuidgen

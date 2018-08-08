@@ -1,0 +1,128 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: nfs
+  nfs:
+    path: /home/where/nfs
+    server: 10.82.45.42
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    getambassador.io/config: |-
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: tfserving-mapping-inception-nfs-get
+      prefix: /models/inception-nfs/
+      rewrite: /
+      method: GET
+      service: inception-nfs.kubeflow:8000
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: tfserving-mapping-inception-nfs-post
+      prefix: /models/inception-nfs/
+      rewrite: /model/inception-nfs:predict
+      method: POST
+      service: inception-nfs.kubeflow:8000
+  labels:
+    app: inception-nfs
+    app.kubernetes.io/deploy-manager: ksonnet
+  name: inception-nfs
+spec:
+  clusterIP: 10.108.238.74
+  ports:
+  - name: grpc-tf-serving
+    port: 9000
+    protocol: TCP
+    targetPort: 9000
+  - name: http-tf-serving-proxy
+    port: 8000
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    app: inception-nfs
+  sessionAffinity: None
+  type: ClusterIP
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: inception-nfs
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: inception-nfs
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: inception-nfs
+    spec:
+      containers:
+      - args:
+        - /usr/bin/tensorflow_model_server
+        - --port=9000
+        - --model_name=inception-nfs
+        - --model_base_path=/home
+        image: registry.cn-shenzhen.aliyuncs.com/gcr_io_kubeflow/tf-model-server-cpu:v20180327-995786ec
+        imagePullPolicy: IfNotPresent
+        name: inception-nfs
+        ports:
+        - containerPort: 9000
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "4"
+            memory: 4Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
+        securityContext:
+          runAsUser: 1000
+        volumeMounts:
+        - name: inception-persisten-storage
+          mountPath: /home/
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: inception-persisten-storage
+        persistentVolumeClaim:
+          claimName: nfs
