@@ -17,7 +17,6 @@ limitations under the License.
 
 import os
 
-from google.cloud import storage
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
