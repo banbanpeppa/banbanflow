@@ -4,7 +4,9 @@ set -xe
 uuid=`uuidgen`
 uuid=${uuid:0:8}
 
-mkdir -p /tmp/model-train
+if [ ! -d "/tmp/model-train" ]; then
+	mkdir -p /tmp/model-train
+if
 
 MODEL_TRANING_YAML_TMP=/tmp/model-train/training-${uuid}.yaml
 
