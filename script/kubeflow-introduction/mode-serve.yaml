@@ -1,30 +1,29 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: nfs-pv
+  name: mnist-model-serve-uuidgen
 spec:
   capacity:
     storage: 1Gi
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Recycle
-  storageClassName: nfs
-  nfs:
-    path: /home/where/nfs
-    server: 10.82.45.42
+  storageClassName: mms
+  hostPath:
+    path: /cephfs/model-traning/uuidgen
 
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: nfs
+  name: mnist-model-serve-uuidgen
 spec:
   accessModes:
     - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
-  storageClassName: nfs
+  storageClassName: mms
 
 ---
 apiVersion: v1
@@ -35,23 +34,23 @@ metadata:
       ---
       apiVersion: ambassador/v0
       kind:  Mapping
-      name: tfserving-mapping-inception-nfs-get
-      prefix: /models/inception-nfs/
+      name: tfserving-mapping-inception-mnist-uuidgen-get
+      prefix: /models/inception-mnist-uuidgen/
       rewrite: /
       method: GET
-      service: inception-nfs.kubeflow:8000
+      service: inception-mnist-uuidgen.kubeflow:8000
       ---
       apiVersion: ambassador/v0
       kind:  Mapping
-      name: tfserving-mapping-inception-nfs-post
-      prefix: /models/inception-nfs/
-      rewrite: /model/inception-nfs:predict
+      name: tfserving-mapping-inception-mnist-uuidgen-post
+      prefix: /models/inception-mnist-uuidgen/
+      rewrite: /model/inception-mnist-uuidgen:predict
       method: POST
-      service: inception-nfs.kubeflow:8000
+      service: inception-mnist-uuidgen.kubeflow:8000
   labels:
-    app: inception-nfs
+    app: inception-mnist-uuidgen
     app.kubernetes.io/deploy-manager: ksonnet
-  name: inception-nfs
+  name: inception-mnist-uuidgen
 spec:
   clusterIP: 10.108.238.74
   ports:
@@ -64,7 +63,7 @@ spec:
     protocol: TCP
     targetPort: 8000
   selector:
-    app: inception-nfs
+    app: inception-mnist-uuidgen
   sessionAffinity: None
   type: ClusterIP
 
@@ -72,14 +71,14 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: inception-nfs
+  name: inception-mnist-uuidgen
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: inception-nfs
+      app: inception-mnist-uuidgen
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -89,17 +88,17 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        app: inception-nfs
+        app: inception-mnist-uuidgen
     spec:
       containers:
       - args:
         - /usr/bin/tensorflow_model_server
         - --port=9000
-        - --model_name=inception-nfs
+        - --model_name=inception-mnist-uuidgen
         - --model_base_path=/home
         image: registry.cn-shenzhen.aliyuncs.com/gcr_io_kubeflow/tf-model-server-cpu:v20180327-995786ec
         imagePullPolicy: IfNotPresent
-        name: inception-nfs
+        name: inception-mnist-uuidgen
         ports:
         - containerPort: 9000
           protocol: TCP
@@ -125,4 +124,4 @@ spec:
       volumes:
       - name: inception-persisten-storage
         persistentVolumeClaim:
-          claimName: nfs
+          claimName: mnist-model-serve-uuidgen
